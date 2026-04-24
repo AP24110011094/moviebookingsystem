@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>neonCinema | Premium Movie Streaming</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+
+    <!-- ========== BACKGROUND POSTER WALL ========== -->
+    <div id="bg-wall"></div>
+
+    <!-- ========== AUTH OVERLAY ========== -->
+    <div id="auth-overlay">
+        <div class="auth-backdrop"></div>
+        <div class="auth-card">
+            <div class="auth-logo"><i class="fas fa-film"></i> neonCinema</div>
+            <h2 id="auth-title">Connecting...</h2>
+            <p id="auth-subtitle"></p>
+
+            <form id="auth-form" style="display:none;" onsubmit="handleAuth(event)">
+                <input type="hidden" id="auth-mode" value="login">
+                <div id="signup-fields" style="display:none;">
+                    <div class="input-group">
+                        <label>Full Name</label>
+                        <input type="text" id="auth-fullname" placeholder="Enter your full name">
+                    </div>
+                    <div class="input-group">
+                        <label>Email Address</label>
+                        <input type="email" id="auth-email" placeholder="email@example.com">
+                    </div>
+                    <div class="input-group">
+                        <label>Phone Number</label>
+                        <input type="tel" id="auth-phone" placeholder="+91 0000000000">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Username</label>
+                    <input type="text" id="auth-username" required placeholder="admin">
+                </div>
+                <div class="input-group">
+                    <label>Password</label>
+                    <input type="password" id="auth-password" required placeholder="••••••••">
+                </div>
+                <button type="submit" id="auth-btn" class="btn-primary">Login Now</button>
+                <p id="auth-toggle" style="margin-top:20px; font-size: 0.9rem; color: var(--text-muted);"></p>
+                <p id="auth-error" class="error-text" style="color:#ff5252; margin-top:10px;"></p>
+            </form>
+
+            <div id="auth-loading">
+                <div class="loader"></div>
+                <p style="color:var(--text-muted)">Securing connection...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== MAIN APP ========== -->
+    <div id="app" style="display:none;">
+
+        <!-- Navigation -->
+        <header class="top-nav">
+            <div style="display:flex; align-items:center; gap:15px;">
+                <button id="global-back-btn" class="btn-back-settings"
+                    style="display:none; margin-right: 10px; background: rgba(255,255,255,0.1); border-radius: 50%; width: 35px; height: 35px; display: none; align-items: center; justify-content: center;"
+                    onclick="goBackTab()">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <a href="#" class="nav-logo" onclick="showTab('home')">
+                    <i class="fas fa-film"></i> neonCinema
+                </a>
+            </div>
+
+            <div class="nav-links">
+                <a href="#" class="nav-link active" id="link-home" onclick="showTab('home')">Movies</a>
+                <a href="#" class="nav-link" id="link-upcoming" onclick="showTab('upcoming')">Upcoming</a>
+                <a href="#" class="nav-link" id="link-history" onclick="showTab('history')">My Bookings</a>
+            </div>
+
+            <div class="nav-actions">
+                <div class="search-bar">
+                    <i class="fas fa-search" style="color:var(--text-muted)"></i>
+                    <input type="text" placeholder="Search for movies..." onkeyup="searchMovies(this.value)">
+                </div>
+                <div class="user-profile-container" style="position:relative;">
+                    <div class="user-profile" onclick="toggleProfile()">
+                        <img src="https://ui-avatars.com/api/?name=User&background=f97316&color=fff" alt="User"
+                            id="user-avatar">
+                        <i class="fas fa-caret-down" style="font-size:0.8rem; margin-left:5px;"></i>
+                    </div>
+                    <div id="profile-dropdown" class="profile-dropdown" style="display:none;">
+                        <div class="dropdown-header">
+                            <strong id="dropdown-username">Admin</strong>
+                        </div>
+                        <hr>
+                        <a href="#" onclick="showTab('history'); toggleProfile()"><i class="fas fa-ticket-alt"></i> My
+                            Bookings</a>
+                        <a href="#" onclick="showTab('settings'); toggleProfile()"><i class="fas fa-cog"></i>
+                            Settings</a>
+                        <hr>
+                        <a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Sign out of neonCinema</a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+
+            <!-- Location Access Banner -->
+            <div id="location-banner" class="location-banner">
+                <div>
+                    <span><i class="fas fa-map-marker-alt"></i> Showing movies near</span>
+                    <strong id="location-name"
+                        style="cursor:pointer; border-bottom:1px dashed var(--primary); padding-bottom:2px;"
+                        onclick="openLocationModal()">Mumbai</strong>
+                </div>
+                <button class="btn-secondary" onclick="detectLocation()">Use my location</button>
+            </div>
+
+            <!-- HOME TAB -->
+            <section id="tab-home" class="tab">
+                <!-- Hero Banner -->
+                <div id="hero-slider" class="hero-slider">
+                    <div class="hero-overlay">
+                        <span class="hero-tag">FEATURED PREMIERE</span>
+                        <h1 class="hero-title" id="hero-title">Loading...</h1>
+                        <p class="hero-desc" id="hero-desc"></p>
+                        <button class="btn-primary" style="width:fit-content; padding: 14px 40px;" id="hero-btn">Book
+                            Now</button>
+                    </div>
+                    <button class="hero-nav hero-prev" onclick="prevHero()"><i class="fas fa-chevron-left"></i></button>
+                    <button class="hero-nav hero-next" onclick="nextHero()"><i
+                            class="fas fa-chevron-right"></i></button>
+                    <div class="hero-dots" id="hero-dots"></div>
+                </div>
+
+                <!-- Genre Filters -->
+                <div class="section-container" style="padding-bottom: 0;">
+                    <div class="genre-chips" id="genre-container">
+                        <!-- JS filled -->
+                    </div>
+                </div>
+
+                <div class="section-container" id="most-booked-section" style="display:none;">
+                    <div class="section-header">
+                        <h2 class="section-title">Most Booked Right Now</h2>
+                    </div>
+                    <div id="most-booked-card" class="movie-grid movie-card-single">
+                        <!-- Most booked card -->
+                    </div>
+                </div>
+
+                <!-- Movies Grid -->
+                <div class="section-container">
+                    <div class="section-header">
+                        <h2 class="section-title">Recommended Movies</h2>
+                    </div>
+                    <div id="movie-grid" class="movie-grid">
+                        <!-- Dynamic Cards -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- UPCOMING TAB -->
+            <section id="tab-upcoming" class="tab" style="display:none;">
+                <div class="section-container">
+                    <div class="section-header">
+                        <h2 class="section-title">🎬 Upcoming Movies <span
+                                style="font-size:0.75rem; background:var(--primary); color:#000; padding:4px 12px; border-radius:20px; font-weight:700; margin-left:10px;">2026</span>
+                        </h2>
+                    </div>
+                    <p style="color:var(--text-muted); margin-bottom:30px; font-size:0.95rem;">Movies arriving in
+                        cinemas later this year. Tickets will be available soon!</p>
+                    <div id="upcoming-grid" class="movie-grid">
+                        <!-- Dynamic Upcoming Cards -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- HISTORY TAB (MY BOOKINGS) -->
+            <section id="tab-history" class="tab" style="display:none;">
+                <div class="section-container">
+                    <div class="section-header" style="display:flex; justify-content:space-between; align-items:center;">
+                        <h2 class="section-title">🎟️ My Bookings</h2>
+                        <button class="btn-secondary btn-sm" onclick="loadBookings()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                    <p style="color:var(--text-muted); margin-bottom:30px; font-size:0.95rem;">View and manage your active and past tickets.</p>
+                    <div id="ticket-list" class="ticket-list-container">
+                        <!-- Dynamic Tickets go here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- SETTINGS TAB -->
+            <section id="tab-settings" class="tab" style="display:none;">
+                <div class="section-container">
+                    <div class="section-header">
+                        <h2 class="section-title">App Settings</h2>
+                    </div>
+
+                    <div class="settings-container">
+                        <!-- Settings Navigation (Sidebar) -->
+                        <div class="settings-nav">
+                            <button class="settings-nav-btn active" onclick="switchSettingsPane('account', this)">
+                                <i class="fas fa-user"></i> Account & Profile
+                            </button>
+                            <button class="settings-nav-btn" onclick="switchSettingsPane('location', this)">
+                                <i class="fas fa-map-marker-alt"></i> Location & Language
+                            </button>
+                            <button class="settings-nav-btn" onclick="switchSettingsPane('movies', this)">
+                                <i class="fas fa-film"></i> Movie Preferences
+                            </button>
+                            <button class="settings-nav-btn" onclick="switchSettingsPane('notifications', this)">
+                                <i class="fas fa-bell"></i> Notifications
+                            </button>
+                            <button class="settings-nav-btn" onclick="switchSettingsPane('privacy', this)">
+                                <i class="fas fa-shield-alt"></i> Privacy & Security
+                            </button>
+                            <button class="settings-nav-btn" onclick="switchSettingsPane('offers', this)">
+                                <i class="fas fa-gift"></i> Offers & Rewards
+                            </button>
+                            <button class="settings-nav-btn" onclick="switchSettingsPane('support', this)">
+                                <i class="fas fa-question-circle"></i> Support & Help
+                            </button>
+                            <button class="settings-nav-btn" onclick="switchSettingsPane('app', this)">
+                                <i class="fas fa-cog"></i> App Performance
+                            </button>
+                        </div>
+
+                        <!-- Settings Content -->
+                        <div class="settings-main">
+                            <!-- Account & Profile -->
+                            <div id="set-account" class="settings-pane active">
+                                <div class="settings-header">
+                                    <h3>Account & Profile</h3>
+                                    <p>Manage your personal information and login methods.</p>
+                                </div>
+                                <div class="profile-edit-header">
+                                    <div class="profile-avatar-edit">
+                                        <img src="https://ui-avatars.com/api/?name=User&background=f97316&color=fff"
+                                            alt="User" id="settings-avatar-preview">
+                                        <button class="btn-icon-float"
+                                            onclick="document.getElementById('avatar-upload').click()">
+                                            <i class="fas fa-camera"></i>
+                                        </button>
+                                        <input type="file" id="avatar-upload" style="display:none" accept="image/*"
+                                            onchange="handleAvatarUpload(event)">
+                                    </div>
+                                    <div class="profile-info-brief">
+                                        <h4 id="settings-username-display">Admin User</h4>
+                                        <span id="settings-email-display">admin@neoncinema.com</span>
+                                    </div>
+                                </div>
+                                <div class="settings-group">
+                                    <div class="settings-row">
+                                        <div class="settings-label">
+                                            <strong>Full Name</strong>
+                                            <span>Display name on tickets</span>
+                                        </div>
+                                        <input type="text" id="settings-name-input" class="settings-input"
+                                            value="Admin User">
+                                    </div>
+                                    <div class="settings-row">
+                                        <div class="settings-label">
+                                            <strong>Email Address</strong>
+                                            <span>For booking confirmations</span>
+                                        </div>
+                                        <input type="email" id="settings-email-input" class="settings-input"
+                                            value="admin@neoncinema.com">
+                                    </div>
+                                    <div class="settings-row">
+                                        <div class="settings-label">
+                                            <strong>Phone Number</strong>
+                                            <span>For SMS reminders</span>
+                                        </div>
+                                        <input type="tel" id="settings-phone-input" class="settings-input"
+                                            value="+91 9876543210">
+                                    </div>
+                                </div>
+                                <div class="settings-group">
+                                    <h4>Linked Accounts</h4>
+                                    <div class="settings-row">
+                                        <div class="settings-label">
+                                            <strong>Google</strong>
+                                            <span id="settings-google-email">Connected as admin@gmail.com</span>
+                                        </div>
+                                        <button class="btn-secondary btn-sm">Disconnect</button>
+                                    </div>
+                                    <div class="settings-row">
+                                        <div class="settings-label">
+                                            <strong>Apple ID</strong>
+                                            <span>Not connected</span>
+                                        </div>
+                                        <button class="btn-primary btn-sm">Connect</button>
+                                    </div>
+                                </div>
+                                <button class="btn-primary" style="margin-top:20px;"
+                                    onclick="saveAccountSettings()">Save Changes</button>
+                            </div>
+
+                            <!-- Location & Language -->
+                            <div id="set-location" class="settings-pane">
+                                <div class="settings-header">
+                                    <h3>Location & Language</h3>
+                                    <p>Customize your region and display preferences.</p>
+                                </div>
+                                <div class="settings-group">
+                                    <div class="settings-row">
+                                        <div class="settings-label">
+                                            <strong>Auto-detect Location</strong>
+                                            <span>Use GPS to find theaters near you</span>
+                                        </div>
+                                        <label class="switch">
+                                            <input type="checkbox" checked>
+                                            <span class="slider round"></span>
+                                        </label>
+                                    </div>
+                                    <div class="settings-row">
+                                        <div class="settings-label">
+                                            <strong>Preferred City</strong>
+                                            <span>Selected city for manual search</span>
+                                        </div>
+                                        <select id="settings-city-input" class="settings-input"
+                                            onchange="saveAppPreferences()">
+                                            <option>Mumbai</option>
+                                            <option>Delhi</option>
+                                            <option>Bangalore</option>
+                                            <option>Hyderabad</option>
+                                        </select>
+                                    </div>
+                                    <div class="settings-row">
+                                        <div class="settings-label">
+                                            <strong>App Language</strong>
+                                            <span>Translate the entire interface</span>
+                                        </div>
+                                        <select id="settings-lang-input" class="settings-input"
+                                            onchange="saveAppPreferences()">
+                                            <option>English (US)</option>
+                                            <option>Hindi</option>
+                                            <option>Telugu</option>
+                                            <option>Spanish</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Movie Preferences -->
+                            <div id="set-movies" class="settings-pane">
+                                <div class="settings-header">
+                                    <h3>Movie Preferences</h3>
+                                    <p>Personalize your movie browsing experience.</p>
+                                </div>
+                                <div class="settings-group">
+                                    <h4>Favorite Genres</h4>
+                                    <div class="genre-grid-selection">
+                                        <label class="genre-check"><input type="checkbox" checked> Action</label>
+                                        <label class="genre-check"><input type="checkbox" checked> Superhero</label>
+                                        <label class="genre-check"><input type="checkbox"> Romance</label>
+                                        <label class="genre-check"><input type="checkbox" checked> Sci-Fi</label>
+                                        <label class="genre-check"><input type="checkbox"> Comedy</label>
+                                        <label class="genre-check"><input type="checkbox"> Horror</label>
+                                    </div>
+                                </div>
+                                <div class="settings-group">
+                                    <div class="settings-row">
+                                        <div class="settings-label">
+                                            <strong>Preferred Seat Type</strong>
+                                            <span>Automatically select if available</span>
+                                        </div>
+                                        <select class="settings-input">
+                                            <option>Executive (Gold)</option>
+                                            <option>Premium (Platinum)</option>
+                                            <option>Normal (Silver)</option>
+                                        </select>
+                                    </div>
+                                    <div class="settings-row">
+                                        <div class="settings-label">
+                                            <strong>Content Filtering</strong>
+                                            <span>Hide movies with specific ratings</span>
+                                        </div>
+                                        <select class="settings-input">
+                                            <option>Show All</option>
+                                            <option>U/A & Below</option>
+                                            <option>U Only</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Notifications -->
+                            <div id="set-notifications" class="settings-pane">
+                                <div class="settings-header">
+                                    <h3>Notifications</h3>
+                                    <p>Choose what updates you want to receive.</p>
+                                </div>
+                                <div class="settings-group">
+                                    <div class="settings-row">
+                                        <div class="settings-label">
+                                            <strong>Booking Confirmations</strong>
+                                            <span>Immediate alerts after booking</span>
+                                        </div>
+                                        <div class="toggle-group">
+                                            <span class="tiny-label">Email</span>
+                                            <label class="switch sm"><input type="checkbox" checked
+                                                    onchange="saveAppPreferences()"><span
+                                                    class="slider round"></span></label>
+                                        </div>
+                                    </div>
+                                    <div class="settings-row">
+                                        <div class="settings-label">
+                                            <strong>Show Reminders</strong>
+                                            <span>1 hour before your show starts</span>
+                                        </div>
+                                        <div class="toggle-group">
+                                            <span class="tiny-label">SMS</span>
+                                            <label class="switch sm"><input type="checkbox" checked
+                                                    onchange="saveAppPreferences()"><span
+                                                    class="slider round"></span></label>
+                                        </div>
+                                    </div>
+                                    <div class="settings-row">
+                                        <div class="settings-label">
+                                            <strong>Promotional Offers</strong>
+                                            <span>Discounts and new movie alerts</span>
+                                        </div>
+                                        <label class="switch">
+                                            <input type="checkbox" onchange="saveAppPreferences()">
+                                            <span class="slider round"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                            <!-- Privacy & Security -->
+                            <div id="set-privacy" class="settings-pane">
+                                <div class="settings-header">
+                                    <h3>Privacy & Security</h3>
+                                    <p>Protect your account and control your data.</p>
+                                </div>
+                                <div class="settings-group">
+                                    <div class="settings-row">
+                                        <div class="settings-label">
+                                            <strong>Two-Factor Authentication</strong>
+                                            <span>Extra security via SMS or App</span>
+                                        </div>
+                                        <button class="btn-secondary btn-sm">Enable</button>
+                                    </div>
+                                    <div class="settings-row">
+                                        <div class="settings-label">
+                                            <strong>Active Sessions</strong>
+                                            <span id="active-sessions-text">Logged in on this device</span>
+                                        </div>
+                                        <button class="btn-text-only" onclick="alert('You are currently logged in on this browser session.')">Manage</button>
+                                    </div>
+                                </div>
+                                <div class="settings-group danger-zone">
+                                    <h4>Account Actions</h4>
+                                    <button class="btn-text-only" onclick="downloadUserData()">Download My Data</button>
+                                    <button class="btn-text-only" style="color: #ef4444;" onclick="deleteAccount()">Delete Account</button>
+                                </div>
+                            </div>
+
+                            <!-- Offers & Rewards -->
+                            <div id="set-offers" class="settings-pane">
+                                <div class="settings-header">
+                                    <h3>Offers & Rewards</h3>
+                                    <p>View your rewards and loyalty status.</p>
+                                </div>
+                                <div class="reward-card">
+                                    <div class="reward-points">
+                                        <span class="points-val">2,450</span>
+                                        <span class="points-label">neonPoints</span>
+                                    </div>
+                                    <p>You have enough points for a **FREE POPCORN**!</p>
+                                    <button class="btn-primary btn-sm">Redeem Now</button>
+                                </div>
+                                <div class="settings-group">
+                                    <h4>Active Subscriptions</h4>
+                                    <div class="membership-badge">
+                                        <i class="fas fa-crown"></i>
+                                        <strong>neonCinema Premium</strong>
+                                        <span>Expires in 142 days</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Support -->
+                            <div id="set-support" class="settings-pane">
+                                <div class="settings-header">
+                                    <h3>Support & Help</h3>
+                                    <p>We're here to help you with any issues.</p>
+                                </div>
+                                <div class="settings-group">
+                                    <a href="#" class="settings-link-row" onclick="openChat('faq')">
+                                        <i class="fas fa-book"></i>
+                                        <span>Frequently Asked Questions</span>
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                    <a href="#" class="settings-link-row" onclick="openChat('support')">
+                                        <i class="fas fa-comments"></i>
+                                        <span>Chat with Support</span>
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                    <a href="#" class="settings-link-row" onclick="openChat('report')">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                        <span>Report a Booking Issue</span>
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- App Settings -->
+                            <div id="set-app" class="settings-pane">
+                                <div class="settings-header">
+                                    <h3>App Performance</h3>
+                                    <p>Manage app-specific configurations.</p>
+                                </div>
+                                <div class="settings-group">
+                                    <div class="settings-row">
+                                        <div class="settings-label">
+                                            <strong>Theme Mode</strong>
+                                            <span>Switch between light and dark</span>
+                                        </div>
+                                        <div class="theme-toggle">
+                                            <button class="theme-btn active" onclick="toggleTheme('dark', this)"><i
+                                                    class="fas fa-moon"></i> Dark</button>
+                                            <button class="theme-btn" onclick="toggleTheme('light', this)"><i
+                                                    class="fas fa-sun"></i> Light</button>
+                                        </div>
+                                    </div>
+                                    <div class="settings-row">
+                                        <div class="settings-label">
+                                            <strong>Clear Cache</strong>
+                                            <span id="cache-size-display">Frees up 42MB of storage</span>
+                                        </div>
+                                        <button class="btn-secondary btn-sm" onclick="clearCache()">Clear Now</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- ========== LOCATION MODAL ========== -->
+    <div id="location-modal" class="modal">
+        <div class="modal-content location-modal-content">
+            <div class="location-header">
+                <h3><i class="fas fa-map-marker-alt" style="color:var(--primary);"></i> Search your city</h3>
+                <button class="location-close" onclick="closeLocationModal()"><i class="fas fa-times"></i></button>
+            </div>
+
+            <div class="search-wrapper">
+                <i class="fas fa-search"></i>
+                <input type="text" id="city-search" placeholder="Enter city, town or village..."
+                    class="location-search-input" oninput="filterCities()">
+            </div>
+
+            <div id="city-list" class="city-list">
+                <!-- Populated by JS -->
+            </div>
+
+            <button class="gps-btn" onclick="detectLocation()">
+                <i class="fas fa-location-arrow"></i> Use My Current Location
+            </button>
+        </div>
+    </div>
+
+    <!-- ========== MOVIE DETAIL MODAL ========== -->
+    <div id="movie-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-sidebar" id="modal-sidebar">
+                <!-- Poster & Basic Info -->
+            </div>
+            <div class="modal-main">
+                <button onclick="closeModal()"
+                    style="position:absolute; top:20px; right:20px; background:none; border:none; color:#fff; font-size:1.5rem; cursor:pointer;">&times;</button>
+
+                <h2 id="modal-title" style="font-size:2rem; margin-bottom:10px;"></h2>
+                <div id="modal-stats"
+                    style="display:flex; gap:15px; color:var(--primary); font-weight:600; margin-bottom:15px;"></div>
+                <p id="modal-description" style="color:var(--text-muted); line-height:1.6; margin-bottom:30px;"></p>
+                <div id="review-list" style="display:flex; flex-direction:column; gap:10px; margin-bottom: 30px;"></div>
+
+                <div class="show-selector">
+                    <h4 style="margin-bottom:15px; color:var(--primary)">Available Theaters & Shows</h4>
+                    <div id="date-selector"
+                        style="display:flex; gap:10px; overflow-x:auto; margin-bottom:20px; padding-bottom:10px; border-bottom:1px solid #333;">
+                        <!-- Dates go here -->
+                    </div>
+                    <div id="show-options" class="theater-list" style="display:flex; flex-direction:column; gap:25px;">
+                        <!-- Groups created by JS -->
+                    </div>
+                </div>
+
+                <!-- Seat Selection Step -->
+                <div id="seat-selection-step" style="display:none; margin-top:40px; animation:fadeIn 0.5s;">
+                    <div class="seat-container">
+                        <div id="seat-grid" class="grid-wrapper">
+                            <!-- JS filled -->
+                        </div>
+
+                        <div class="grid-legend">
+                            <div class="legend-item">
+                                <div class="seat silver" style="border-bottom:3px solid #94a3b8"></div> <span>Normal
+                                    (₹150)</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="seat gold" style="border-bottom:3px solid var(--primary)"></div>
+                                <span>Executive (₹200)</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="seat platinum" style="border-bottom:3px solid #ffd700"></div> <span>Premium
+                                    (₹250)</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="seat selected"></div> Selected
+                            </div>
+                            <div class="legend-item">
+                                <div class="seat occupied"></div> Occupied
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="booking-summary">
+                        <div class="summary-info">
+                            <h3 id="summary-price">₹0.00</h3>
+                            <p id="summary-seats">No seats selected</p>
+                        </div>
+                        <button id="proceed-btn" class="btn-primary" style="width:200px;"
+                            onclick="showPaymentOptions()">Proceed to Payment</button>
+                    </div>
+
+                    <div id="payment-panel" class="payment-panel"
+                        style="display:none; margin-top:30px; border-top:1px solid var(--border); padding-top:30px;">
+                        <h4 style="margin-bottom:20px; color:var(--primary)">Select Payment Method</h4>
+                        <div class="payment-methods"
+                            style="display:grid; grid-template-columns:repeat(auto-fit, minmax(120px, 1fr)); gap:12px; margin-bottom:25px;">
+                            <div class="payment-chip" onclick="selectPayment('card', this)"><i
+                                    class="fab fa-cc-visa"></i><span>Card</span></div>
+                            <div class="payment-chip" onclick="selectPayment('upi', this)"><i
+                                    class="fas fa-mobile-alt"></i><span>UPI</span></div>
+                            <div class="payment-chip" onclick="selectPayment('net', this)"><i
+                                    class="fas fa-university"></i><span>Net Banking</span></div>
+                            <div class="payment-chip" onclick="selectPayment('wallet', this)"><i
+                                    class="fas fa-wallet"></i><span>Wallet</span></div>
+                        </div>
+
+                        <!-- Card Form -->
+                        <div id="pay-card" class="payment-form" style="display:none; flex-direction:column; gap:15px;">
+                            <input type="text" placeholder="Card Number (XXXX XXXX XXXX XXXX)" class="auth-input">
+                            <div style="display:flex; gap:10px;">
+                                <input type="text" placeholder="MM/YY" class="auth-input" style="flex:1;">
+                                <input type="password" placeholder="CVV" class="auth-input" style="flex:1;">
+                            </div>
+                        </div>
+
+                        <!-- UPI Form -->
+                        <div id="pay-upi" class="payment-form"
+                            style="display:none; flex-direction:column; gap:20px; align-items:center; background: rgba(103, 58, 183, 0.05); border: 1px solid rgba(103, 58, 183, 0.2);">
+                            <div style="text-align:center;">
+                                <div
+                                    style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 15px;">
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/e/e1/PhonePe_Logo.pneg"
+                                        onerror="this.src='https://img.icons8.com/color/48/phonepe.png'" alt="PhonePe"
+                                        style="height: 24px;">
+                                    <span style="font-weight: 700; color: #673ab7; font-size: 1.1rem;">PhonePe</span>
+                                </div>
+                                <p style="margin-bottom:15px; color:var(--text-muted); font-size:0.9rem;">Scan the QR
+                                    code using any UPI App</p>
+                                <div
+                                    style="background:#fff; padding:15px; border-radius:20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); width:220px; height:220px; display:flex; align-items:center; justify-content:center; margin: 0 auto; border: 4px solid #673ab7;">
+                                    <img src="images/phonepe_qr.png" alt="PhonePe QR"
+                                        style="width:100%; height:100%; object-fit:contain;">
+                                </div>
+                                <p style="margin-top:15px; font-weight:700; color:#673ab7; font-size: 0.9rem;">Merchant:
+                                    neonCinema PVT LTD</p>
+                            </div>
+
+                            <div style="width:100%; display:flex; align-items:center; gap:10px;">
+                                <hr style="flex:1; border:0; border-top:1px solid var(--border);">
+                                <span style="color:var(--text-muted); font-size:0.8rem;">OR ENTER UPI ID</span>
+                                <hr style="flex:1; border:0; border-top:1px solid var(--border);">
+                            </div>
+
+                            <div style="width: 100%; position: relative;">
+                                <input type="text" id="upi-id-input" placeholder="yourname@upi" class="auth-input"
+                                    style="width:100%; padding-right: 100px;">
+                                <button onclick="verifyUpi()"
+                                    style="position: absolute; right: 5px; top: 5px; bottom: 5px; background: #673ab7; color: #fff; border: none; padding: 0 15px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; cursor: pointer;">VERIFY</button>
+                            </div>
+                            <p id="upi-verify-msg" style="font-size: 0.8rem; margin-top: -10px; display: none;"></p>
+                        </div>
+
+                        <!-- Net Banking -->
+                        <div id="pay-net" class="payment-form" style="display:none;">
+                            <select class="auth-input settings-input" style="width:100%; background:var(--bg-surface);">
+                                <option>Select your Bank</option>
+                                <option>State Bank of India</option>
+                                <option>HDFC Bank</option>
+                                <option>ICICI Bank</option>
+                                <option>Axis Bank</option>
+                            </select>
+                        </div>
+
+                        <!-- Wallet -->
+                        <div id="pay-wallet" class="payment-form" style="display:none;">
+                            <div style="display:flex; gap:15px;">
+                                <div class="payment-chip" style="flex:1; justify-content:center;">Paytm</div>
+                                <div class="payment-chip" style="flex:1; justify-content:center;">PhonePe</div>
+                            </div>
+                        </div>
+
+                        <!-- Promo Code Section -->
+                        <div class="promo-section" style="margin-top: 25px; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 12px; border: 1px dashed var(--border);">
+                            <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px;">Have a Promo Code?</label>
+                            <div style="display:flex; gap:10px;">
+                                <input type="text" id="promo-input" placeholder="Enter code (e.g. NEON50)" class="auth-input" style="flex:1; margin:0; font-size:0.9rem; background: rgba(255,255,255,0.05); color: #fff;">
+                                <button onclick="applyPromoCode()" class="btn-secondary" style="padding:0 20px; white-space:nowrap;">Apply</button>
+                            </div>
+                            <p id="promo-msg" style="font-size:0.75rem; margin-top:8px; display:none;"></p>
+                        </div>
+
+                        <button id="final-pay-btn" class="btn-primary" style="width:100%; margin-top:25px;"
+                            onclick="confirmBooking()">Pay & Confirm Booking</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Support Chatbot -->
+    <div id="chat-bot" class="chat-container">
+        <div class="chat-header">
+            <span><i class="fas fa-robot"></i> neonBot AI</span>
+            <button onclick="closeChat()" style="background:none; border:none; color:#000; cursor:pointer;"><i
+                    class="fas fa-times"></i></button>
+        </div>
+        <div id="chat-messages" class="chat-messages">
+            <div class="msg bot">Hello! I'm neonBot, your AI cinema assistant. I've analyzed our current movie lineup
+                and theaters. How can I help you today?</div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" id="chat-input-field" class="chat-input" placeholder="Type a message..."
+                onkeypress="if(event.key==='Enter') sendChatMessage()">
+            <button onclick="sendChatMessage()" class="btn-icon-float"
+                style="position:static; width:35px; height:35px;"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
